@@ -1,0 +1,105 @@
+# ============================================================
+#  SENK — SO(3) Equivariant Neural Kalman Networks
+#  Full runtime dependency list
+#
+#  Entry-point scripts:
+#    train_senk.py              Main training (V2 + ENK + EP, all modes)
+#    prep_prior_cache.py        Offline electron-prior cache precompute
+#    compute_nbo_train_stats.py NBO-GSC training-statistics computation
+#    v2_spectra_infer.py        V2 spectra inference and plotting
+#    nbo_nets/train_nbo_v2.py   NBO electron-prior training
+#    nbo_nets/train_nbo_joint.py NBO joint training
+#
+#  Recommended environment:
+#    Python 3.10
+#    CUDA 12.1 / 12.2 (compatible with PyTorch cu121 wheels)
+#
+#  Dependency provenance (based on global import scan):
+#    torch             63 files  core framework
+#    torch_geometric   28 files  graph neural networks
+#    torch_scatter     15 files  scatter operations
+#    torch_cluster      1 file   radius_graph (graph_attention_transformer.py)
+#    e3nn              33 files  equivariant neural networks
+#    numpy             11 files  numerical computing
+#    tqdm               8 files  progress bars
+#    rdkit              1 top-level + lazy uses  skeleton build / SMILES handling
+#    scipy              1 top-level (nets/tools.py)
+#    pandas             lazy (qcmol)
+#    h5py               1 file   QMe14S data extraction
+#    timm               lazy (optim_factory.py, try/except)
+#    matplotlib         lazy (inference plotting)
+#    scikit-learn       lazy (nbo_nets/train_nbo_v2.py)
+#
+#  Not used (no installation required):
+#    torchvision        no import
+#    torchaudio         no import
+#    torch_sparse       no import
+#    pytorch_lightning  no import
+# ============================================================
+#
+#  Full installation instructions:
+#
+#  # Step 1: create conda environment
+#  conda create -n senk python=3.10 -y
+#  conda activate senk
+#
+#  # Step 2: install PyTorch (cu121 is compatible with CUDA 12.1/12.2)
+#  pip install torch==2.2.2 \
+#      --index-url \
+#      https://download.pytorch.org/whl/cu121
+#
+#  # Step 3: PyG C++ extensions (versions must match torch exactly)
+#  pip install torch-scatter torch-cluster \
+#      -f https://data.pyg.org/whl/torch-2.2.2+cu121.html
+#
+#  # Step 4: PyG main package
+#  pip install torch-geometric==2.5.3
+#
+#  # Step 5: remaining dependencies (this file)
+#  pip install -r requirements.txt
+#
+#  # Step 6: verify
+#  python -c "import torch; \
+#      print(torch.__version__, torch.cuda.is_available())"
+#  python -c "import torch_geometric, \
+#      torch_scatter, e3nn; print('PyG+e3nn OK')"
+#  python -c "from nets.clean_equiformer_polar_ext \
+#      import CleanEquiformerPolarExt; print('SENK OK')"
+#
+
+# Core framework: PyTorch (cu121 wheels are forward-compatible with CUDA 12.2)
+# Note: torch is already installed in Step 2; this line only pins the version constraint.
+torch==2.2.2
+
+# PyTorch Geometric ecosystem (versions must match torch + cuda exactly)
+# Note: torch-scatter / torch-cluster are already installed in Step 3;
+#       torch-sparse is not used anywhere in the codebase and is not required.
+torch-geometric==2.5.3
+torch-scatter==2.1.2+pt22cu121
+torch-cluster==1.6.3+pt22cu121
+
+# Equivariant neural network core
+e3nn==0.5.1
+
+# Scientific computing (top-level imports, required)
+numpy==1.26.4
+scipy==1.12.0
+tqdm==4.66.2
+
+# Molecular processing and 3D conformer generation (skeleton build / SMILES handling)
+rdkit==2023.9.5
+
+# Data storage and tooling
+h5py==3.10.0
+pandas==2.2.1
+
+# Optional dependencies below (lazy import or try/except; missing them does not break the main pipeline)
+
+# Optimizer factory (try/except import in optim_factory.py; falls back to torch.optim.AdamW if absent)
+timm==0.9.12
+
+# Inference-side plotting (lazy import in v2_spectra_infer.py)
+matplotlib==3.8.4
+
+# NBO training statistics (lazy import in nbo_nets/train_nbo_v2.py)
+scikit-learn==1.4.2
