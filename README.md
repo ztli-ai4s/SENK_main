@@ -483,19 +483,7 @@ The skeleton file contains the atom / bond / lone-pair token graph required by t
 
 If you find this repository useful for your research, please consider citing the accompanying manuscript:
 
-```bibtex
-@article{senk2026response,
-  title   = {Response-state learning for vibrational spectra of molecules with stereoelectronic effects},
-  author  = {Author 1 and Author 2 and Author 3},
-  journal = {Journal Name},
-  year    = {2026},
-  volume  = {XX},
-  pages   = {XXX--XXX},
-  doi     = {10.XXXX/XXXXX}
-}
-```
 
-Please replace the author list, journal name, volume, pages and DOI with the final published values once the manuscript is accepted.
 
 This repository also builds on the following open-source projects, which we gratefully acknowledge:
 
