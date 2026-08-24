@@ -323,16 +323,6 @@ python v2_spectra_infer.py \
     --out_png outputs/spectrum.png
 ```
 
-### New molecules
-
-For molecules outside QM9S/QMe14S, build the electronic-prior skeleton from SMILES or SDF before inference:
-
-```bash
-python tools/build_skeleton_from_smiles.py \
-    --smiles "CC(=O)Oc1ccccc1C(=O)O" \
-    --out outputs/aspirin_skeleton.pt
-```
-
 ---
 
 ## Citation
