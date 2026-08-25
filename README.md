@@ -329,6 +329,8 @@ python v2_spectra_infer.py \
 
 Citation information will be added once a preprint or published version of the manuscript is available.
 
+**Zenodo:** https://doi.org/10.5281/zenodo.22091196
+
 **Authors:** Zetong Li, Zhuosong Xie, Hengyu Fan, Jiaao Yu, Juanni Wu, Honglin Li
 
 ---
