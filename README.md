@@ -206,8 +206,8 @@ python prep_prior_cache.py \
     --dataset qme14s_opt186102 \
     --task spectra4 \
     --electron-prior-mode simg \
-    --electron-prior-ckpt nbo_nets/checkpoints/2025-11-10_11-06-07_nbo_model_with_links/nbo_model_with_links_best.pt \
-    --electron-prior-stats nbo_nets/checkpoints/2025-11-10_11-06-07_nbo_model_with_links/nbo_model_with_links_norm_stats.pt \
+    --electron-prior-ckpt nbo_nets/checkpoints/2026-03-10_00-01-48_nbo_foundation_v2/nbo_foundation_v2_best.pt \
+    --electron-prior-stats nbo_nets/checkpoints/2026-03-10_00-01-48_nbo_foundation_v2/nbo_foundation_v2_norm_stats.pt \
     --shard-size 256 \
     --keep-shards 2 \
     --gpu 0
@@ -223,8 +223,8 @@ The repository includes the following auxiliary checkpoints:
 
 | Checkpoint | Path | Purpose |
 |---|---|---|
-| NBO predictor | `nbo_nets/checkpoints/2025-11-10_11-06-07_nbo_model_with_links/nbo_model_with_links_best.pt` | Electronic-prior inference |
-| NBO normalization statistics | `nbo_nets/checkpoints/2025-11-10_11-06-07_nbo_model_with_links/nbo_model_with_links_norm_stats.pt` | Matching normalization statistics |
+| NBO predictor | `nbo_nets/checkpoints/2026-03-10_00-01-48_nbo_foundation_v2/nbo_foundation_v2_best.pt` | Electronic-prior inference |
+| NBO normalization statistics | `nbo_nets/checkpoints/2026-03-10_00-01-48_nbo_foundation_v2/nbo_foundation_v2_norm_stats.pt` | Matching normalization statistics |
 | Lone-pair predictor | `tools/lp_pred_model.ckpt` | Skeleton construction |
 | DetaNet QM9S weights | `detanet_nets/qm9spectra/*.pth` | Baseline comparison |
 

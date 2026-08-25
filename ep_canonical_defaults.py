@@ -6,9 +6,23 @@ from typing import Any, List
 DEFAULT_SENK_ENK_EP_HIJ = "checkpoints/EP/hij/qme14s/best.pt"
 DEFAULT_SENK_ENK_EP_DD = "checkpoints/EP/dedipole/qme14s/best.pt"
 DEFAULT_SENK_ENK_EP_DP = "checkpoints/EP/depolar/qme14s/best.pt"
+# Joint bundle (SIMG+qcMol); pairs with electron_prior_mode=qcmol.
 DEFAULT_ELECTRON_PRIOR_CKPT = "nbo_nets/checkpoints/20260325-143400_joint_pdbbind_from_pubchem_joint/nbo_foundation_training_best.pt"
 DEFAULT_ELECTRON_PRIOR_STATS = "nbo_nets/checkpoints/20260325-143400_joint_pdbbind_from_pubchem_joint/norm_stats.pt"
 DEFAULT_NBO_TRAIN_STATS = "nbo_train_stats.pt"
+
+# SIMG v2 prior (train_nbo_v2.py Stage-1); pairs with electron_prior_mode=simg.
+DEFAULT_ELECTRON_PRIOR_CKPT_SIMG = "nbo_nets/checkpoints/2026-03-10_00-01-48_nbo_foundation_v2/nbo_foundation_v2_best.pt"
+DEFAULT_ELECTRON_PRIOR_STATS_SIMG = "nbo_nets/checkpoints/2026-03-10_00-01-48_nbo_foundation_v2/nbo_foundation_v2_norm_stats.pt"
+
+
+def apply_simg_prior_preset(args: Any) -> List[str]:
+    """Switch inference args to the SIMG v2 foundation prior."""
+    changes: List[str] = []
+    _set(args, "electron_prior_mode", "simg", changes)
+    _set(args, "electron_prior_ckpt", DEFAULT_ELECTRON_PRIOR_CKPT_SIMG, changes)
+    _set(args, "electron_prior_stats", DEFAULT_ELECTRON_PRIOR_STATS_SIMG, changes)
+    return changes
 
 
 def _set(args: Any, name: str, value: Any, changes: List[str]) -> None:
