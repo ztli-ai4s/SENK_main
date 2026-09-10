@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "kind": "chemical_support_probability",
+  "fit_split": "chemical_group_holdout",
+  "target": "insufficient_training_support",
+  "count_unit": "unique_molecule",
+  "feature_names": [
+    "p_support_raw"
+  ],
+  "feature_mean": [
+    0.010967798740955496
+  ],
+  "feature_scale": [
+    0.06017583850802316
+  ],
+  "coefficients": [
+    1.2424860373982027
+  ],
+  "intercept": -10.06560153011187,
+  "l2": 1.0,
+  "n_edges": 1617390,
+  "n_folds": 5,
+  "fit_metrics": {
+    "brier": 0.0013066067815212929,
+    "ece_10bin": 0.0007456041103629394,
+    "auc": 0.9994188812218038,
+    "mean_probability": 0.004943149147700948,
+    "positive_rate": 0.004943149147700925
+  },
+  "group_cross_fitted_metrics": {
+    "brier": 0.0013078881928234693,
+    "ece_10bin": 0.000726371340469386,
+    "auc": 0.9994179515649354,
+    "mean_probability": 0.004943503889380379,
+    "positive_rate": 0.004943149147700925
+  },
+  "probability_semantics": "Probability that an edge lacks both sufficient exact-environment and independent local-motif support after excluding its chemical group."
+}

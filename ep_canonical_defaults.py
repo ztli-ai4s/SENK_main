@@ -43,11 +43,11 @@ def _set_if_outdated(args: Any, name: str, legacy_values: tuple[Any, ...], value
 
 
 def apply_canonical_ep_defaults(args: Any, *, fill_ep_checkpoints: bool = False) -> List[str]:
-    """Apply the conservative EP/cascade runtime defaults.
+    """Apply EP defaults, selecting feature_spring unless legacy is requested.
 
-    The canonical path is: EP on all tensor branches, NBO-GSC on Hij only,
-    DD GSC kept as a light optional correction, and DP GSC disabled.
-    Explicit non-legacy user choices are preserved.
+    The feature path retains internal electron priors and uses a complete local
+    Hessian spring correction; output DD/DP corrections are disabled. Historical
+    GSC settings below remain available to the explicit legacy output policy.
     """
     changes: List[str] = []
 
@@ -88,4 +88,12 @@ def apply_canonical_ep_defaults(args: Any, *, fill_ep_checkpoints: bool = False)
     _set_if_outdated(args, "nbo_gsc_hij_hbond_alpha_scale", (1.0,), 1.6, changes)
     _set_if_outdated(args, "nbo_gsc_hij_interaction_soften_scale", (1.3,), 1.0, changes)
     _set_if_outdated(args, "nbo_gsc_hij_interaction_alpha_scale", (3.0,), 1.0, changes)
+    # Final feature EP: preserve model/weight layout; replace output correction.
+    if getattr(args, "ep_output_policy", "feature_spring") == "feature_spring":
+        _set(args, "ep_output_policy", "feature_spring", changes)
+        _set(args, "electron_prior_scale", 0.005, changes)
+        _set(args, "nbo_gsc_branches", "hij", changes)
+        _set(args, "nbo_gsc_hij_policy", "interaction_rule", changes)
+        if getattr(args, "nbo_train_stats", "") in ("", "nbo_train_stats.pt"):
+            _set(args, "nbo_train_stats", "nbo_train_stats_runtime_hij_full.pt", changes)
     return changes
