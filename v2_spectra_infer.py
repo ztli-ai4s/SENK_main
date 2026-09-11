@@ -88,8 +88,6 @@ from detanet_nets.spectra_simulator import (
 )
 from nbo_spectral_calibration import NBOGuidedCalibrator, _extract_nbo_from_model
 from ep_canonical_defaults import apply_canonical_ep_defaults
-from ep_feature_runtime import make_calibrator as _make_inference_calibrator
-import json
 
 # Element table
 _ELEMENTS = [
@@ -1849,15 +1847,7 @@ def generate_spectrum(
         if nbo is not None:
             _gsc = _gsc_requested
             num_nodes = int(z_dev.shape[0])
-            _feature_ep = bool(getattr(nbo_calibrator, "feature_ep", False))
-            if _feature_ep:
-                from ep_feature_runtime import apply_feature
-                pre_freq, pre_modes = hessfreq(Hi=Hi, Hij=Hij, masses=masses,
-                    edge_index=edge_index, normal=False, linear=linear, scale=scale)
-                Hi, Hij = apply_feature(nbo_calibrator, Hi, Hij, dd, dp, nbo,
-                    edge_index, z_dev, pos_dev, masses, _gsc_enk_context,
-                    pre_freq, pre_modes, skel_data, scale)
-            elif "hij" in _gsc:
+            if "hij" in _gsc:
                 pre_freq, pre_modes = None, None
                 if bool(getattr(nbo_calibrator, "hij_mode_aware", False)):
                     pre_freq, pre_modes = hessfreq(
@@ -1879,14 +1869,14 @@ def generate_spectrum(
                 Hi = nbo_calibrator.compensate_hii_from_hij_delta(
                     Hi, getattr(nbo_calibrator, "last_hij_delta", None), edge_index,
                 )
-            if "dd" in _gsc and not _feature_ep:
+            if "dd" in _gsc:
                 dd = nbo_calibrator.calibrate_dedipole(
                     dd, nbo, pos=pos_dev,
                     enk_ood_score=_gsc_enk_ood_score,
                     enk_context=_gsc_enk_context,
                     z=z_dev,
                 )
-            if "dp" in _gsc and not _feature_ep:
+            if "dp" in _gsc:
                 dp = nbo_calibrator.calibrate_depolar(
                     dp, nbo, edge_index, num_nodes,
                     enk_ood_score=_gsc_enk_ood_score,
@@ -1945,8 +1935,6 @@ def generate_spectrum(
                   f"  dp norm={dp.norm(dim=-1).mean().item():.4f}"
                   f"{_hij_dbg_str}{_dd_dbg_str}{_dp_dbg_str}")
         else:
-            if getattr(nbo_calibrator, "feature_ep", False):
-                raise RuntimeError("Feature EP requires model NBO evidence")
             print("  -> NBO-GSC skipped (no EP model provides NBO features)")
     elif nbo_calibrator is not None and not _any_ep:
         print("  -> NBO-GSC skipped (EP not active in any model)")
@@ -1980,8 +1968,6 @@ def generate_spectrum(
         "yir": yir.detach().cpu(),
         "yram": yram.detach().cpu(),
     }
-    if nbo_calibrator is not None and getattr(nbo_calibrator, "feature_ep", False):
-        out["feature_ep"] = getattr(nbo_calibrator, "feature_ep_diagnostics", {})
     if return_internal:
         out.update({
             "modes": modes.detach().cpu(),
@@ -2001,13 +1987,6 @@ def generate_spectrum(
             if isinstance(hij_delta, torch.Tensor):
                 out["hij_delta"] = hij_delta.detach().cpu()
     return out
-
-
-def _spectrum_archive_value(value):
-    """Keep tensor NPZ fields unchanged; encode feature diagnostics as JSON text."""
-    if isinstance(value, dict):
-        return np.asarray(json.dumps(value, ensure_ascii=False))
-    return value.numpy()
 
 
 # --- Reference spectrum parsing (Gaussian / experimental output formats) ---
@@ -2702,7 +2681,7 @@ def _run_batch_full(args, device: torch.device) -> None:
         _train_stats = torch.load(args.nbo_train_stats, weights_only=True, map_location="cpu")
         print(f"NBO-GSC training stats loaded: {args.nbo_train_stats}")
     if _any_ep_batch and _gsc_branches:
-        nbo_calibrator = _make_inference_calibrator(args,
+        nbo_calibrator = NBOGuidedCalibrator(
             alpha_hij=float(getattr(args, "nbo_gsc_alpha_hij", 0.25)),
             alpha_dd=float(getattr(args, "nbo_gsc_alpha_dd", 0.0)),
             alpha_dp=float(getattr(args, "nbo_gsc_alpha_dp", 0.20)),
@@ -2788,7 +2767,7 @@ def _run_batch_full(args, device: torch.device) -> None:
         _train_stats_ep_batch = None
         if getattr(args, "nbo_train_stats", ""):
             _train_stats_ep_batch = torch.load(args.nbo_train_stats, weights_only=True, map_location="cpu")
-        nbo_calibrator_ep_batch = _make_inference_calibrator(args,
+        nbo_calibrator_ep_batch = NBOGuidedCalibrator(
             alpha_hij=float(getattr(args, "nbo_gsc_alpha_hij", 0.25)),
             alpha_dd=float(getattr(args, "nbo_gsc_alpha_dd", 0.0)),
             alpha_dp=float(getattr(args, "nbo_gsc_alpha_dp", 0.20)),
@@ -2957,11 +2936,11 @@ def _run_batch_full(args, device: torch.device) -> None:
 
             # Save npz
             npz_path = out_dir / f"{fname_base}.npz"
-            save_d = {k: _spectrum_archive_value(v) for k, v in results.items()}
+            save_d = {k: v.numpy() for k, v in results.items()}
             save_d["smiles"] = np.array([smi])
             if results_ep is not None:
                 for k, v in results_ep.items():
-                    save_d[f"ep_{k}"] = _spectrum_archive_value(v)
+                    save_d[f"ep_{k}"] = v.numpy()
             if det_results is not None:
                 for k, v in det_results.items():
                     save_d[f"det_{k}"] = v.numpy()
@@ -3064,9 +3043,6 @@ def build_parser() -> argparse.ArgumentParser:
                    help="How to read Gaussian .txt reference spectra. auto prefers Peak information over the already-broadened Spectra curve.")
 
     # Device
-    p.add_argument("--ep_output_policy", choices=["feature_spring", "legacy"], default="feature_spring", help="Output EP policy; feature_spring is the validated default")
-    p.add_argument("--ep_support_stats", default="nbo_train_stats_hij_support_v2.pt")
-    p.add_argument("--ep_support_artifact", default="outputs/selective_ep_calibration/chemical_support_calibrator.json")
     p.add_argument("--ep", action="store_true",
                    help="Use the canonical SENK-EP defaults and auto-fill the EP checkpoints.")
     p.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda"])
@@ -3547,7 +3523,7 @@ def main():
         _train_stats_interactive = torch.load(args.nbo_train_stats, weights_only=True, map_location="cpu")
         print(f"NBO-GSC training stats loaded: {args.nbo_train_stats}")
     if _any_ep_main and _gsc_branches_interactive:
-        nbo_calibrator = _make_inference_calibrator(args,
+        nbo_calibrator = NBOGuidedCalibrator(
             alpha_hij=float(getattr(args, "nbo_gsc_alpha_hij", 0.25)),
             alpha_dd=float(getattr(args, "nbo_gsc_alpha_dd", 0.0)),
             alpha_dp=float(getattr(args, "nbo_gsc_alpha_dp", 0.20)),
@@ -3635,7 +3611,7 @@ def main():
         _train_stats_ep = None
         if getattr(args, "nbo_train_stats", ""):
             _train_stats_ep = torch.load(args.nbo_train_stats, weights_only=True, map_location="cpu")
-        nbo_calibrator_ep = _make_inference_calibrator(args,
+        nbo_calibrator_ep = NBOGuidedCalibrator(
             alpha_hij=float(getattr(args, "nbo_gsc_alpha_hij", 0.25)),
             alpha_dd=float(getattr(args, "nbo_gsc_alpha_dd", 0.0)),
             alpha_dp=float(getattr(args, "nbo_gsc_alpha_dp", 0.20)),
@@ -3840,10 +3816,10 @@ def main():
 
 # --- Save npz ---
     if args.out:
-        save_dict = {k: _spectrum_archive_value(v) for k, v in results.items()}
+        save_dict = {k: v.numpy() for k, v in results.items()}
         if results_ep is not None:
             for k, v in results_ep.items():
-                save_dict[f"ep_{k}"] = _spectrum_archive_value(v)
+                save_dict[f"ep_{k}"] = v.numpy()
         if det_results is not None:
             for k, v in det_results.items():
                 save_dict[f"det_{k}"] = v.numpy()
