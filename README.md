@@ -3,9 +3,12 @@
 **Official PyTorch implementation of**  
 *"Response-state learning for transferable vibrational spectroscopic characterization with electron prior."*
 
+🎉The web application has now been deployed and is available for free use🚀. Please feel free to try to quickly generate reliable vibration spectra references and analyze the attribution of peak vibrations.🎉
+
 SENK is a response-state framework for transferable vibrational spectroscopy. It combines an SO(3)-equivariant backbone for Hessian, dipole-derivative, and polarizability-derivative prediction with an Equivariant Neural Kalman (ENK) module for state-dependent refinement and reliability sensing, and an NBO-informed electronic-prior pathway for consistency regularization and bounded spectral calibration.
 
-<img width="7680" height="7041" alt="Fig 1_8 26_应用场景_Ma" src="https://github.com/user-attachments/assets/c9552a84-b979-4ab3-a999-5e3873762c24" />
+<img width="7680" height="7041" alt="Figure 1" src="https://github.com/user-attachments/assets/f5f7da6c-3f3d-4d3b-8bc6-cf6dafa5e195" />
+
 
 
 ---
